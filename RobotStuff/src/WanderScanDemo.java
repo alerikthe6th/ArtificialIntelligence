@@ -36,9 +36,9 @@ public class WanderScanDemo {
 		colorSensor = new EV3ColorSensor(SensorPort.S4);
 		distanceSampleProvider = distanceSensor.getDistanceMode();
 
-		robotPilot.setTravelSpeed(30);  // speed of motor B and C?
+		robotPilot.setTravelSpeed(30);
 		robotPilot.setAcceleration(60);
-		robotPilot.setRotateSpeed(60);  // turn speed radius motor A?
+		robotPilot.setRotateSpeed(60);
 		robotPilot.reset();
 
 		LCD.clear();
@@ -52,13 +52,14 @@ public class WanderScanDemo {
 	public static void run(){
 		bumpSampleProvider = bumpSensor.getTouchMode();
 		float[] bumpSample = new float[bumpSampleProvider.sampleSize()];
-		float[] distanceScanData = new float[12]; //vary for our scope of project
+		float[] distanceScanData = new float[12];
 
 		bumpSampleProvider.fetchSample(bumpSample, 0);
 
 		//looking for white
 		while(colorSensor.getColorID() != Color.WHITE && !Button.ENTER.isDown()){
 			scanSurroundings(distanceScanData);
+			correction(distanceScanData);
 			int angle = chooseDirectionAngle(distanceScanData);
 
 			robotPilot.rotate(angle);
@@ -71,7 +72,7 @@ public class WanderScanDemo {
 					robotPilot.stop();
 					robotPilot.travel(-10);
 					robotPilot.rotate(90); // always turn 90 degrees when you bump into something?
-				}						   
+				}
 				if (colorSensor.getColorID() == Color.WHITE){ // found the GOAL
 					break;
 				}
@@ -90,11 +91,11 @@ public class WanderScanDemo {
 	 */
 	public static void scanSurroundings(float[] distanceScanData ){
 		int count = 0;
-		while(count < 12){
+		while(count < 4){
 			if (Button.ENTER.isDown()) { return; } // break out, if someone is holding down the ENTER button.
 
 			distanceScanData[count] = getDistanceMeasurement();
-			frontNeckMotor.rotate(30);  // 30 degrees is 1/12 of a full circle...
+			frontNeckMotor.rotate(90);  // 30 degrees is 1/12 of a full circle...
 			count++;
 		}
 		frontNeckMotor.rotate(-360); // rotate neck back (otherwise cords will tighten/tangle). 
@@ -125,10 +126,33 @@ public class WanderScanDemo {
 				maxIndex = i;
 			}
 		}	
-		int angle = (maxIndex* -30);   // goes towards that index
+		int angle = (maxIndex* -90);   // goes towards that index
 		if (angle < -180) { angle += 360; }
 
 		return angle;
+	}
+	
+	public static void correction(float[] dirDist) {
+		
+		SampleProvider sp = distanceSensor.getDistanceMode();
+		float[] sample = new float[sp.sampleSize()];
+		sp.fetchSample(sample, 0);
+		float distance = sample[0];
+		
+		if(dirDist[1] <= 10) {
+			Sound.playNote(Sound.FLUTE, 700, 100);
+			robotPilot.rotate(90);
+			frontNeckMotor.rotate(180);
+			while(distance <= 5) { 	//distance is in meters?
+				Sound.playNote(Sound.FLUTE, 700, 100);
+				robotPilot.travel(5);
+				sp.fetchSample(sample, 0);
+				distance = sample[0];
+			}
+			robotPilot.rotate(-90);
+			frontNeckMotor.rotate(-180);
+		}
+		
 	}
 
 	/** Convenience method to get ONE distance measurement from the robot.

@@ -1,3 +1,6 @@
+
+
+
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.lcd.LCD;
@@ -14,7 +17,6 @@ import lejos.hardware.sensor.EV3UltrasonicSensor;
 
 
 public class Maze {
-	
 	static DifferentialPilot robotPilot;
 	static RegulatedMotor frontNeckMotor = Motor.A;
 	static EV3UltrasonicSensor distanceSensor;
@@ -34,11 +36,11 @@ public class Maze {
 		colorSensor = new EV3ColorSensor(SensorPort.S4);
 		distanceSampleProvider = distanceSensor.getDistanceMode();
 
-		robotPilot.setTravelSpeed(30);  // speed of motor B and C?
+		robotPilot.setTravelSpeed(30);
 		robotPilot.setAcceleration(60);
-		robotPilot.setRotateSpeed(60);  // turn speed radius motor A?
+		robotPilot.setRotateSpeed(60);
 		robotPilot.reset();
-		
+
 		LCD.clear();
 		LCD.drawString("ENTER to run!", 0,0);
 		Button.waitForAnyPress();
@@ -50,13 +52,14 @@ public class Maze {
 	public static void run(){
 		bumpSampleProvider = bumpSensor.getTouchMode();
 		float[] bumpSample = new float[bumpSampleProvider.sampleSize()];
-		float[] distanceScanData = new float[4]; //vary for our scope of project
+		float[] distanceScanData = new float[12];
 
 		bumpSampleProvider.fetchSample(bumpSample, 0);
 
 		//looking for white
 		while(colorSensor.getColorID() != Color.WHITE && !Button.ENTER.isDown()){
 			scanSurroundings(distanceScanData);
+			correction(distanceScanData);
 			int angle = chooseDirectionAngle(distanceScanData);
 
 			robotPilot.rotate(angle);
@@ -69,7 +72,7 @@ public class Maze {
 					robotPilot.stop();
 					robotPilot.travel(-10);
 					robotPilot.rotate(90); // always turn 90 degrees when you bump into something?
-				}						   
+				}
 				if (colorSensor.getColorID() == Color.WHITE){ // found the GOAL
 					break;
 				}
@@ -128,6 +131,28 @@ public class Maze {
 
 		return angle;
 	}
+	
+	public static void correction(float[] dirDist) {
+		
+		SampleProvider sp = distanceSensor.getDistanceMode();
+		float[] sample = new float[sp.sampleSize()];
+		sp.fetchSample(sample, 0);
+		float distance = sample[0];
+		
+		if(dirDist[1] <= 50) {
+			Sound.playNote(Sound.FLUTE, 700, 100);
+			robotPilot.rotate(90);
+			frontNeckMotor.rotate(180);
+			while(distance <= 50) {
+				robotPilot.travel(5);
+				sp.fetchSample(sample, 0);
+				distance = sample[0];
+			}
+			robotPilot.rotate(-90);
+			frontNeckMotor.rotate(-180);
+		}
+		
+	}
 
 	/** Convenience method to get ONE distance measurement from the robot.
 	 * (Technically it's a bit inefficient to keep re-allocating this small float[] array every time,
@@ -142,7 +167,6 @@ public class Maze {
 
 		return distanceSample[0];
 	}
-
 
 
 
