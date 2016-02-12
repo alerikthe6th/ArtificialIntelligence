@@ -38,7 +38,7 @@ public class Maze {
 		robotPilot.setAcceleration(60);
 		robotPilot.setRotateSpeed(60);  // turn speed radius motor A?
 		robotPilot.reset();
-
+		
 		LCD.clear();
 		LCD.drawString("ENTER to run!", 0,0);
 		Button.waitForAnyPress();
@@ -50,7 +50,7 @@ public class Maze {
 	public static void run(){
 		bumpSampleProvider = bumpSensor.getTouchMode();
 		float[] bumpSample = new float[bumpSampleProvider.sampleSize()];
-		float[] distanceScanData = new float[12]; //vary for our scope of project
+		float[] distanceScanData = new float[4]; //vary for our scope of project
 
 		bumpSampleProvider.fetchSample(bumpSample, 0);
 
@@ -88,11 +88,11 @@ public class Maze {
 	 */
 	public static void scanSurroundings(float[] distanceScanData ){
 		int count = 0;
-		while(count < 12){
+		while(count < 4){
 			if (Button.ENTER.isDown()) { return; } // break out, if someone is holding down the ENTER button.
 
 			distanceScanData[count] = getDistanceMeasurement();
-			frontNeckMotor.rotate(30);  // 30 degrees is 1/12 of a full circle...
+			frontNeckMotor.rotate(90);  // 30 degrees is 1/12 of a full circle...
 			count++;
 		}
 		frontNeckMotor.rotate(-360); // rotate neck back (otherwise cords will tighten/tangle). 
@@ -123,7 +123,7 @@ public class Maze {
 				maxIndex = i;
 			}
 		}	
-		int angle = (maxIndex* -30);   // goes towards that index
+		int angle = (maxIndex* -90);   // goes towards that index
 		if (angle < -180) { angle += 360; }
 
 		return angle;
