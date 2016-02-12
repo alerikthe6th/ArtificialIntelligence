@@ -52,12 +52,12 @@ public class WanderScanDemo {
 	public static void run(){
 		bumpSampleProvider = bumpSensor.getTouchMode();
 		float[] bumpSample = new float[bumpSampleProvider.sampleSize()];
-		float[] distanceScanData = new float[12];
+		float[] distanceScanData = new float[4];
 
 		bumpSampleProvider.fetchSample(bumpSample, 0);
 
 		//looking for white
-		while(colorSensor.getColorID() != Color.WHITE && !Button.ENTER.isDown()){
+		while(colorSensor.getColorID() != Color.WHITE && !Button.ESCAPE.isDown()){
 			scanSurroundings(distanceScanData);
 			correction(distanceScanData);
 			int angle = chooseDirectionAngle(distanceScanData);
@@ -135,23 +135,50 @@ public class WanderScanDemo {
 	public static void correction(float[] dirDist) {
 		
 		SampleProvider sp = distanceSensor.getDistanceMode();
-		float[] sample = new float[sp.sampleSize()];
-		sp.fetchSample(sample, 0);
-		float distance = sample[0];
+		float distance;
 		
-		if(dirDist[1] <= 10) {
+		float rightDist = dirDist[1];
+		float leftDist = dirDist[3];
+		
+		
+		LCD.drawString(String.format("Dist: %.2f", rightDist), 0, 4);
+		Delay.msDelay(500);
+		LCD.clear();
+		
+		if(rightDist <= 0.25) {
 			Sound.playNote(Sound.FLUTE, 700, 100);
-			robotPilot.rotate(90);
-			frontNeckMotor.rotate(180);
-			while(distance <= 5) { 	//distance is in meters?
-				Sound.playNote(Sound.FLUTE, 700, 100);
-				robotPilot.travel(5);
-				sp.fetchSample(sample, 0);
-				distance = sample[0];
-			}
 			robotPilot.rotate(-90);
+			
+			distance = getDistanceMeasurement();
+			LCD.drawString(String.format("Dist: %.2f", distance), 0, 4);
+			Delay.msDelay(500);
+			while(distance <= 0.4 && !Button.ESCAPE.isDown()) { 	//distance is in meters?
+				LCD.clear();
+				LCD.drawString(String.format("Dist: %.2f", distance), 0, 4);
+				robotPilot.travel(-5);
+				Delay.msDelay(500);
+				distance = getDistanceMeasurement();
+			}
+			robotPilot.rotate(90);
+		}
+		
+		/*
+		if(leftDist <= 0.25) {
+			Sound.playNote(Sound.FLUTE, 700, 100);
+			robotPilot.rotate(-90);
+			frontNeckMotor.rotate(180);
+			while(distance <= 0.35) { 	//distance is in meters?
+				LCD.drawString(String.format("Dist: %.2f", distance), 0, 4);
+				robotPilot.travel(5);
+				Delay.msDelay(500);
+				LCD.clear();
+				
+				distance = getDistanceMeasurement();
+			}
+			robotPilot.rotate(90);
 			frontNeckMotor.rotate(-180);
 		}
+		*/
 		
 	}
 
