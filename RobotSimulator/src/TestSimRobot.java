@@ -42,15 +42,12 @@ public class TestSimRobot {
 		
 		int x = 0;
 		int y = 0;
-		
 		boolean right = false;
 		boolean left = false;
 		boolean back = false;
 		boolean front = false;
-		
-		
 		CellData[][] map = new CellData[4][4];
-		
+		int degreesRotated = 0;
 		
 		for (int robotMoveNum = 0; robotMoveNum < 20; robotMoveNum++)	{
 			
@@ -79,7 +76,15 @@ public class TestSimRobot {
 				back = true;
 			}
 			
-			map[x][y] = new CellData(x,y, front, back, right, left); //saves its location and possibilities
+			if(degreesRotated % 360 == 0){
+				map[x][y] = new CellData(x,y, front, back, right, left);
+			} else if(degreesRotated % 360 == 90){
+				map[x][y] = new CellData(x,y, left, front, back, right);
+			} else if(degreesRotated % 360 == 180){
+				map[x][y] = new CellData(x,y, right, left, front, back);
+			} else if(degreesRotated % 360 == 90){
+				map[x][y] = new CellData(x,y, back, right, left, front);
+			}
 
 			if (distStraight > 1) {
 				simRobot.forwardOneCell();	
@@ -92,11 +97,5 @@ public class TestSimRobot {
 			}
 		}
 		
-		
-	
-	
 	}
-	
-		
-
 }
