@@ -77,8 +77,7 @@ public class TestSimRobot {
 				back = true;
 			}
 			
-			map[x][y] = new CellData(x, y, front, back, right, left); //saves its location and possibilities
-
+			
 			if(degreesRotated % 360 == 0){
 				map[x][y] = new CellData(x,y, front, back, right, left);
 			} else if(degreesRotated % 360 == 90){
@@ -91,19 +90,29 @@ public class TestSimRobot {
 
 			if(map[x][y].chooseMove() == 1) {
 				simRobot.forwardOneCell();
+				map[x][y].setTriedNorth(true);
 				y++;
 			} else if(map[x][y].chooseMove() == 2) {
 				simRobot.right90();
 				simRobot.forwardOneCell();
+				map[x][y].setTriedEast(true);
+				
+				degreesRotated += 90;
 				x++;
 			} else if(map[x][y].chooseMove() == 3) {
 				simRobot.right90();
 				simRobot.right90();
 				simRobot.forwardOneCell();
+				map[x][y].setTriedSouth(true);
+				
+				degreesRotated += 180;
 				y--;
 			} else if(map[x][y].chooseMove() == 4) {
 				simRobot.left90();
 				simRobot.forwardOneCell();
+				map[x][y].setTriedWest(true);
+				
+				degreesRotated += 270;
 				x--;
 			}
 			
