@@ -49,6 +49,7 @@ public class TestSimRobot {
 		boolean front = false;
 		
 		
+		
 		CellData[][] map = new CellData[4][4];
 		
 		
@@ -79,8 +80,27 @@ public class TestSimRobot {
 				back = true;
 			}
 			
-			map[x][y] = new CellData(x,y, front, back, right, left); //saves its location and possibilities
+			map[x][y] = new CellData(x, y, front, back, right, left); //saves its location and possibilities
 
+			if(map[x][y].chooseMove() == 1) {
+				simRobot.forwardOneCell();
+				y++;
+			} else if(map[x][y].chooseMove() == 2) {
+				simRobot.right90();
+				simRobot.forwardOneCell();
+				x++;
+			} else if(map[x][y].chooseMove() == 3) {
+				simRobot.right90();
+				simRobot.right90();
+				simRobot.forwardOneCell();
+				y--;
+			} else if(map[x][y].chooseMove() == 4) {
+				simRobot.left90();
+				simRobot.forwardOneCell();
+				x--;
+			}
+			
+			/*
 			if (distStraight > 1) {
 				simRobot.forwardOneCell();	
 				if (simRobot.colorSensorSeesGoal()) {
@@ -90,6 +110,7 @@ public class TestSimRobot {
 			} else  {
 				simRobot.right90();  //turns right when it can't go straight.
 			}
+			*/
 		}
 		
 		
