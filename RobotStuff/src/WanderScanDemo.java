@@ -58,6 +58,7 @@ public class WanderScanDemo {
 
 		//looking for white
 		while(colorSensor.getColorID() != Color.WHITE && !Button.ESCAPE.isDown()){
+			
 			scanSurroundings(distanceScanData);
 			correction(distanceScanData);
 			int angle = chooseDirectionAngle(distanceScanData);
@@ -162,23 +163,21 @@ public class WanderScanDemo {
 			robotPilot.rotate(90);
 		}
 		
-		/*
+		
 		if(leftDist <= 0.25) {
 			Sound.playNote(Sound.FLUTE, 700, 100);
-			robotPilot.rotate(-90);
-			frontNeckMotor.rotate(180);
-			while(distance <= 0.35) { 	//distance is in meters?
-				LCD.drawString(String.format("Dist: %.2f", distance), 0, 4);
-				robotPilot.travel(5);
-				Delay.msDelay(500);
+			robotPilot.rotate(90);
+			while(leftDist <= 0.4) { 	//distance is in meters?
 				LCD.clear();
+				LCD.drawString(String.format("Dist: %.2f", leftDist), 0, 4);
+				robotPilot.travel(-5);
+				Delay.msDelay(500);
 				
 				distance = getDistanceMeasurement();
 			}
-			robotPilot.rotate(90);
-			frontNeckMotor.rotate(-180);
+			robotPilot.rotate(-90);
 		}
-		*/
+		
 		
 	}
 

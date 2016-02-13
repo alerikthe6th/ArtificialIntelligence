@@ -74,4 +74,20 @@ public class CellData {
 			return 0;
 		}
 	}
+	
+	public void setTriedNorth(boolean value){
+		this.triedNorth = value;
+	}
+	
+	public void setTriedEast(boolean value){
+		this.triedEast = value;
+	}
+	
+	public void setTriedSouth(boolean value){
+		this.triedSouth = value;
+	}
+	
+	public void setTriedWest(boolean value){
+		this.triedWest = value;
+	}
 }
