@@ -20,12 +20,12 @@ public class TestSimRobot {
 		CellData[][] map = new CellData[4][4];
 		int degreesRotated = 0;
 		int angle;
-		LinkedList<CellData> history = new LinkedList<CellData>();
-		LinkedList<CellData> openDir = new LinkedList<CellData>();
+		LinkedList<CellData> moveHistory = new LinkedList<CellData>();
+		LinkedList<CellData> notFullyExplored = new LinkedList<CellData>();
 		
 		
 		for (int robotMoveNum = 0; robotMoveNum < 20; robotMoveNum++)	{
-			
+			//getting the distance reading for the current cell
 			float distStraight = simRobot.getDistanceMeasurement();
 			simRobot.neckRight90();
 			float distRight = simRobot.getDistanceMeasurement();
@@ -37,6 +37,7 @@ public class TestSimRobot {
 			simRobot.neckRight90();
 			Thread.sleep(2000);
 			
+			//determining where the walls are
 			if(Math.ceil(distRight) == 1) {
 				right = true;
 			}
@@ -49,18 +50,43 @@ public class TestSimRobot {
 			if(Math.ceil(distBack) == 1) {
 				back = true;
 			}
+			
+			
 			System.out.println("right: " + right + ", left: " + left + ", front: " + front + ", back: " + back);
 			
 			//keeps track of the orientation of the robot after it has moved with respect to the map
-			if(degreesRotated % 360 == 0){
-				map[x][y] = new CellData(x,y, front, back, right, left);
-			} else if(degreesRotated % 360 == 90){
-				map[x][y] = new CellData(x,y, left, right, front, back);
-			} else if(degreesRotated % 360 == 180){
-				map[x][y] = new CellData(x,y, back, front, left, right);
-			} else if(degreesRotated % 360 == 270){
-				map[x][y] = new CellData(x,y, right, left, back, front);
+			//and creates new cell data if the current cell is new
+			if(map[x][y] == null){
+				if(degreesRotated % 360 == 0){
+					map[x][y] = new CellData(x,y, front, back, right, left);
+				} else if(degreesRotated % 360 == 90){
+					map[x][y] = new CellData(x,y, left, right, front, back);
+				} else if(degreesRotated % 360 == 180){
+					map[x][y] = new CellData(x,y, back, front, left, right);
+				} else if(degreesRotated % 360 == 270){
+					map[x][y] = new CellData(x,y, right, left, back, front);
+				}
+				
+				int possibleMoves = map[x][y].possibleMoves();
+				if(possibleMoves == 1){
+					
+				} else if(possibleMoves == 2){ 
+					moveHistory.add(map[x][y]);
+				} else if(possibleMoves == 3){
+					moveHistory.add(map[x][y]);
+					moveHistory.add(map[x][y]);
+					notFullyExplored.add(map[x][y]);
+				} else if(possibleMoves == 4){
+					moveHistory.add(map[x][y]);
+					moveHistory.add(map[x][y]);
+					moveHistory.add(map[x][y]);
+					notFullyExplored.add(map[x][y]);
+					notFullyExplored.add(map[x][y]);
+				}
 			}
+			
+			
+			
 			
 			System.out.println("Distances Sensed:  R: " + distRight + " F: " + distStraight + " L: " + distLeft + "B: " + distBack);
 			System.out.println("Move chosen: " + map[x][y].chooseMove());
@@ -85,7 +111,6 @@ public class TestSimRobot {
 				simRobot.forwardOneCell();
 				map[x][y].setTriedNorth(true);
 				y++;
-				
 				degreesRotated = 0;
 				
 			} else if(map[x][y].chooseMove() == 2) {
@@ -100,7 +125,6 @@ public class TestSimRobot {
 				System.out.println("Move east");
 				simRobot.forwardOneCell();
 				map[x][y].setTriedEast(true);
-				
 				degreesRotated = 90;
 				x++;
 			} else if(map[x][y].chooseMove() == 3) {
@@ -115,7 +139,6 @@ public class TestSimRobot {
 				System.out.println("Move south");
 				simRobot.forwardOneCell();
 				map[x][y].setTriedSouth(true);
-				
 				degreesRotated = 180;
 				y--;
 			} else if(map[x][y].chooseMove() == 4) {
@@ -130,7 +153,6 @@ public class TestSimRobot {
 				System.out.println("Move west");
 				simRobot.forwardOneCell();
 				map[x][y].setTriedWest(true);
-				
 				degreesRotated = 270;
 				x--;
 			}
@@ -141,14 +163,36 @@ public class TestSimRobot {
 				break;
 			}
 			
-			//resets the boolean values for the next i-th iteration
+			//resets the boolean values for the next iteration
 			right = false;
 			left = false;
 			front = false;
 			back = false;
-		
-
 		}
 		
+	}
+	
+	public static void findClosestMove(SimRobot simRobot, int angle, LinkedList<CellData> moveHistory, LinkedList<CellData> notFullyExplored){
+		CellData destination = notFullyExplored.getLast();
+		CellData currentCell = moveHistory.removeLast();
+		CellData nextMove = moveHistory.getLast();
+		//while the robot is still making its way back to the closest open move
+		while(currentCell.getX() != destination.getX() && currentCell.getY() != destination.getY()){
+			if(currentCell.getX() - nextMove.getX() == 0){ //if the x values are the same then move either north or south
+				if(currentCell.getY() - nextMove.getY() == 1){
+					//then go south
+					System.out.println("Go South");
+					if(angle == 0){
+						simRobot.right90();
+						simRobot.right90();
+					} else if(angle == 90){
+						simRobot.right90();
+					} else if(angle == 270){
+						simRobot.left90();
+					}
+					simRobot.forwardOneCell();
+				}
+			}
+		}
 	}
 }
