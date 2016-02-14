@@ -71,17 +71,17 @@ public class TestSimRobot {
 				if(possibleMoves == 1){
 					
 				} else if(possibleMoves == 2){ 
-					moveHistory.add(map[x][y]);
+					moveHistory.push(map[x][y]);
 				} else if(possibleMoves == 3){
-					moveHistory.add(map[x][y]);
-					moveHistory.add(map[x][y]);
-					notFullyExplored.add(map[x][y]);
+					moveHistory.push(map[x][y]);
+					moveHistory.push(map[x][y]);
+					notFullyExplored.push(map[x][y]);
 				} else if(possibleMoves == 4){
-					moveHistory.add(map[x][y]);
-					moveHistory.add(map[x][y]);
-					moveHistory.add(map[x][y]);
-					notFullyExplored.add(map[x][y]);
-					notFullyExplored.add(map[x][y]);
+					moveHistory.push(map[x][y]);
+					moveHistory.push(map[x][y]);
+					moveHistory.push(map[x][y]);
+					notFullyExplored.push(map[x][y]);
+					notFullyExplored.push(map[x][y]);
 				}
 			}
 			
@@ -173,9 +173,9 @@ public class TestSimRobot {
 	}
 	
 	public static void findClosestMove(SimRobot simRobot, int angle, LinkedList<CellData> moveHistory, LinkedList<CellData> notFullyExplored){
-		CellData destination = notFullyExplored.getLast();
-		CellData currentCell = moveHistory.removeLast();
-		CellData nextMove = moveHistory.getLast();
+		CellData destination = notFullyExplored.peek();
+		CellData currentCell = moveHistory.pop();
+		CellData nextMove = moveHistory.peek();
 		//while the robot is still making its way back to the closest open move
 		while(currentCell.getX() != destination.getX() && currentCell.getY() != destination.getY()){
 			if(currentCell.getX() - nextMove.getX() == 0){ //if the x values are the same then move either north or south
