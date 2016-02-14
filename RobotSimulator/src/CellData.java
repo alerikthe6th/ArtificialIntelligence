@@ -20,6 +20,8 @@ public class CellData {
 		this.eastWall = eastWall;
 		this.southWall = southWall;
 		this.westWall = westWall;
+		
+		
 		if(northWall){
 			triedNorth = true;
 		}
@@ -89,5 +91,36 @@ public class CellData {
 	
 	public void setTriedWest(boolean value){
 		this.triedWest = value;
+	}
+	
+	public String toString(){
+		String str = "";
+		if(northWall){
+			str = str + "Wall to the North, ";
+		}
+		if(southWall){
+			str = str + "Wall to the South, ";
+		}
+		if(eastWall){
+			str = str + "Wall to the East, ";
+		}
+		if(westWall){
+			str = str + "Wall to the West, ";
+		}
+		str = str  + "/n";
+		if(triedNorth) {
+			str = str + "tried North, ";
+		}
+		if(triedSouth) {
+			str = str + "tried South, ";
+		}
+		if(triedEast) {
+			str = str + "tried East, ";
+		}
+		if(triedWest) {
+			str = str + "tried West, ";
+		}
+		
+		return str;
 	}
 }
