@@ -34,6 +34,7 @@ public class CellData {
 		if(westWall){
 			triedWest = true;
 		}
+		
 	}
 	
 	public int getX(){
@@ -93,34 +94,20 @@ public class CellData {
 		this.triedWest = value;
 	}
 	
+	public void setCameFrom(int cameFrom){
+		if(cameFrom == 1){
+			triedSouth = true;
+		} else if(cameFrom == 2){
+			triedWest = true;
+		} else if(cameFrom == 3){
+			triedNorth = true;
+		} else if(cameFrom == 4){
+			triedEast = true;
+		}
+	}
+	
 	public String toString(){
-		String str = "";
-		if(northWall){
-			str = str + "Wall to the North, ";
-		}
-		if(southWall){
-			str = str + "Wall to the South, ";
-		}
-		if(eastWall){
-			str = str + "Wall to the East, ";
-		}
-		if(westWall){
-			str = str + "Wall to the West, ";
-		}
-		str = str  + "/n";
-		if(triedNorth) {
-			str = str + "tried North, ";
-		}
-		if(triedSouth) {
-			str = str + "tried South, ";
-		}
-		if(triedEast) {
-			str = str + "tried East, ";
-		}
-		if(triedWest) {
-			str = str + "tried West, ";
-		}
-		
+		String str = "(" + xCoord + ", " + yCoord + ")";
 		return str;
 	}
 }
