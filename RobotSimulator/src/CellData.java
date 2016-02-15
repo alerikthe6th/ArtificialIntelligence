@@ -44,6 +44,22 @@ public class CellData {
 		return westWall;
 	}
 	
+	public boolean getTriedNorth(){
+		return triedNorth;
+	}
+	
+	public boolean getTriedEast(){
+		return triedEast;
+	}
+	
+	public boolean getTriedSouth(){
+		return triedSouth;
+	}
+	
+	public boolean getTriedWest(){
+		return triedWest;
+	}
+	
 	public int getX(){
 		return xCoord;
 	}
@@ -68,6 +84,22 @@ public class CellData {
 	
 	public void setTriedWest(boolean value){
 		this.triedWest = value;
+	}
+	
+	public void setNorthWall(boolean value){
+		this.northWall = value;
+	}
+	
+	public void setEastWall(boolean value){
+		this.eastWall = value;
+	}
+
+	public void setSouthWall(boolean value){
+		this.southWall = value;
+	}
+	
+	public void setWestWall(boolean value){
+		this.westWall = value;
 	}
 	//------end mutator methods------//
 	
