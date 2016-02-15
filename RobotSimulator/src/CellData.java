@@ -20,21 +20,28 @@ public class CellData {
 		this.eastWall = eastWall;
 		this.southWall = southWall;
 		this.westWall = westWall;
+		//by default set to the wall value--if there is a wall then that route can't be explored
+		this.triedNorth = northWall;
+		this.triedEast = eastWall;
+		this.triedSouth = southWall;
+		this.triedWest = westWall;
 		
-		
-		if(northWall){
-			triedNorth = true;
-		}
-		if(eastWall){
-			triedEast = true;
-		}
-		if(southWall){
-			triedSouth = true;
-		}
-		if(westWall){
-			triedWest = true;
-		}
-		
+	}
+	//------accessor methods------//
+	public boolean getNorthWall(){
+		return northWall;
+	}
+	
+	public boolean getEastWall(){
+		return eastWall;
+	}
+	
+	public boolean getSouthWall(){
+		return southWall;
+	}
+	
+	public boolean getWestWall(){
+		return westWall;
 	}
 	
 	public int getX(){
@@ -44,6 +51,25 @@ public class CellData {
 	public int getY(){
 		return yCoord;
 	}
+	//------end accessor methods------//
+	
+	//------mutator methods------//
+	public void setTriedNorth(boolean value){
+		this.triedNorth = value;
+	}
+	
+	public void setTriedEast(boolean value){
+		this.triedEast = value;
+	}
+		
+	public void setTriedSouth(boolean value){
+		this.triedSouth = value;
+	}
+	
+	public void setTriedWest(boolean value){
+		this.triedWest = value;
+	}
+	//------end mutator methods------//
 	
 	//returns the number of possible moves for a cell.
 	public int possibleMoves(){
@@ -76,22 +102,6 @@ public class CellData {
 		} else {
 			return 0;
 		}
-	}
-	
-	public void setTriedNorth(boolean value){
-		this.triedNorth = value;
-	}
-	
-	public void setTriedEast(boolean value){
-		this.triedEast = value;
-	}
-	
-	public void setTriedSouth(boolean value){
-		this.triedSouth = value;
-	}
-	
-	public void setTriedWest(boolean value){
-		this.triedWest = value;
 	}
 	
 	public void setCameFrom(int cameFrom){
