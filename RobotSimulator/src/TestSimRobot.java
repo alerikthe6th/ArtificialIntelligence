@@ -8,7 +8,7 @@ public class TestSimRobot {
 
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException {
 		
-		SimRobot simRobot = new SimRobot("maze1.txt", 100); // 500 ms animation delay
+		SimRobot simRobot = new SimRobot("maze3.txt", 100); // 500 ms animation delay
 		
 		int x = 0;
 		int y = 0;
