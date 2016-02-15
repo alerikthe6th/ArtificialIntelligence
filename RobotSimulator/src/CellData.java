@@ -44,6 +44,22 @@ public class CellData {
 		return westWall;
 	}
 	
+	public boolean getTriedNorth(){
+		return triedNorth;
+	}
+	
+	public boolean getTriedEast(){
+		return triedEast;
+	}
+	
+	public boolean getTriedSouth(){
+		return triedSouth;
+	}
+	
+	public boolean getTriedWest(){
+		return triedWest;
+	}
+	
 	public int getX(){
 		return xCoord;
 	}

@@ -8,7 +8,7 @@ public class TestSimRobot {
 
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException {
 		
-		SimRobot simRobot = new SimRobot("maze3.txt", 0); // 500 ms animation delay
+		SimRobot simRobot = new SimRobot("maze1.txt", 100); // 500 ms animation delay
 		
 		int x = 0;
 		int y = 0;
@@ -19,7 +19,6 @@ public class TestSimRobot {
 		
 		CellData[][] map = new CellData[4][4];
 		int degreesRotated = 0;
-		int angle;
 		LinkedList<CellData> moveHistory = new LinkedList<CellData>();
 		LinkedList<CellData> notFullyExplored = new LinkedList<CellData>();
 		
@@ -50,23 +49,31 @@ public class TestSimRobot {
 				back = true;
 			}
 			
+			System.out.println("Where are the walls? Front: " + front + " Right: " + right + " Back: " + back + " Left: " + left);
+			
 			//keeps track of the orientation of the robot after it has moved with respect to the map
 			//and creates new cell data if the current cell is new
 			if(map[x][y] == null){
+				System.out.print("Creating new cell data");
 				if(degreesRotated == 0){
+					System.out.println(" while looking North");
 					map[x][y] = new CellData(x,y, front, back, right, left);
 				} else if(degreesRotated == 90){
+					System.out.println(" while looking East");
 					map[x][y] = new CellData(x,y, left, right, front, back);
 				} else if(degreesRotated == 180){
+					System.out.println(" while looking South");
 					map[x][y] = new CellData(x,y, back, front, left, right);
 				} else if(degreesRotated == 270){
+					System.out.println(" while looking West");
 					map[x][y] = new CellData(x,y, right, left, back, front);
 				}
-
+				
 				analyzeSurroundings(map[x][y], map);
 				
 				//adding the cell to the stack the correct number of times
 				int possibleMoves = map[x][y].possibleMoves();
+				System.out.println(possibleMoves);
 				if(possibleMoves >= 2){ 
 					if(possibleMoves == 2){
 						moveHistory.push(map[x][y]);
@@ -91,70 +98,35 @@ public class TestSimRobot {
 				break;
 			}
 			
-			System.out.println("Distances Sensed:  R: " + distRight + " F: " + distStraight + " L: " + distLeft + "B: " + distBack);
+			System.out.println("Distances Sensed:  R: " + distRight + " F: " + distStraight + " L: " + distLeft + " B: " + distBack);
 			System.out.println("Move chosen: " + map[x][y].chooseMove());
 			
+			int choice = map[x][y].chooseMove();
 			//moving conditionals that track its body position relative to the map directions
-			if(map[x][y].chooseMove() == 0){ //if no possible moves begin to backtrack
+			if(choice == 0){ //if no possible moves begin to backtrack
 				//setting the coordinates of the cell it will end up in since the
 				//findClosestMove method doesn't keep track of the coordinates
 				x = notFullyExplored.peek().getX();
 				y = notFullyExplored.peek().getY();
 				findClosestMove(simRobot, degreesRotated, moveHistory, notFullyExplored);
 				degreesRotated = 0;
-			} else if(map[x][y].chooseMove() == 1) {
-				if(degreesRotated == 90){
-					simRobot.left90();
-				} else if(degreesRotated == 180){
-					simRobot.left90();
-					simRobot.left90();
-				} else if(degreesRotated == 270){
-					simRobot.right90();
-				}
-				System.out.println("Move north");
-				simRobot.forwardOneCell();
+			} else if(choice == 1) {
+				moveNorth(simRobot, degreesRotated);
 				map[x][y].setTriedNorth(true);
 				y++;
 				degreesRotated = 0;
-			} else if(map[x][y].chooseMove() == 2) {
-				if(degreesRotated == 0){
-					simRobot.right90();
-				} else if(degreesRotated == 180){
-					simRobot.left90();
-				} else if(degreesRotated == 270){
-					simRobot.right90();
-					simRobot.right90();
-				}
-				System.out.println("Move east");
-				simRobot.forwardOneCell();
+			} else if(choice == 2) {
+				moveEast(simRobot, degreesRotated);
 				map[x][y].setTriedEast(true);
 				degreesRotated = 90;
 				x++;
-			} else if(map[x][y].chooseMove() == 3) {
-				if(degreesRotated == 0){
-					simRobot.right90();
-					simRobot.right90();
-				} else if(degreesRotated == 90){
-					simRobot.right90();
-				} else if(degreesRotated == 270){
-					simRobot.left90();
-				}
-				System.out.println("Move South");
-				simRobot.forwardOneCell();
+			} else if(choice == 3) {
+				moveSouth(simRobot, degreesRotated);
 				map[x][y].setTriedSouth(true);
 				degreesRotated = 180;
 				y--;
-			} else if(map[x][y].chooseMove() == 4) {
-				if(degreesRotated == 0){
-					simRobot.left90();
-				} else if(degreesRotated == 90){
-					simRobot.right90();
-					simRobot.right90();
-				} else if(degreesRotated == 180){
-					simRobot.right90();
-				}
-				System.out.println("Move west");
-				simRobot.forwardOneCell();
+			} else if(choice == 4) {
+				moveWest(simRobot, degreesRotated);
 				map[x][y].setTriedWest(true);
 				degreesRotated = 270;
 				x--;
@@ -179,6 +151,7 @@ public class TestSimRobot {
 		System.out.println("The current cell is (" + currentCell.getX() + ", " + currentCell.getY() + ")");
 		System.out.println("The destination cell is (" + destination.getX() + ", " + destination.getY() + ")");
 		System.out.println("The next cell should be (" + nextMove.getX() + ", " + nextMove.getY() + ")");
+		
 		//while the robot is still making its way back to the closest open move
 		while((currentCell.getX() != destination.getX()) || (currentCell.getY() != destination.getY())){
 			System.out.println("We are in the while loop!");
@@ -188,79 +161,35 @@ public class TestSimRobot {
 				//if the x values are the same then move either north or south
 				System.out.println("Move North or South");
 				if(currentCell.getY() - nextMove.getY() == 1){
-					//then go south
-					System.out.println("Go South");
-					if(angle % 360 == 0){
-						simRobot.right90();
-						simRobot.right90();
-					} else if(angle % 360 == 90){
-						simRobot.right90();
-					} else if(angle % 360 == 270){
-						simRobot.left90();
-					}
-					simRobot.forwardOneCell();
-					//reset the angle to south
+					moveSouth(simRobot, angle);
 					angle = 180;
 					currentCell = moveHistory.pop();
 				} else if(currentCell.getY() - nextMove.getY() == -1){
-					//then go North
-					System.out.println("Go North");
-					if(angle % 360 == 90){
-						simRobot.left90();
-					} else if(angle % 360 == 180){
-						simRobot.left90();
-						simRobot.left90();
-					} else if(angle % 360 == 270){
-						simRobot.right90();
-					}
-					simRobot.forwardOneCell();
-					//reset the angle to North
+					moveNorth(simRobot, angle);
 					angle = 0;
 					currentCell = moveHistory.pop();
 				}
 			} else {
 				System.out.println("Move East or West");
 				if(currentCell.getX() - nextMove.getX() == 1) {
-					//go west
-					System.out.println("Go West");
-					if(angle % 360 == 0){
-						simRobot.left90();
-					} else if(angle % 360 == 90){
-						simRobot.right90();
-						simRobot.right90();
-					} else if(angle % 360 == 180){
-						simRobot.right90();
-					}
-					simRobot.forwardOneCell();
-					//reset the angle to North
+					moveWest(simRobot, angle);
 					angle = 270;
 					currentCell = moveHistory.pop();
 				} else if(currentCell.getX() - nextMove.getX() == -1){
-					//go East
-					System.out.println("Go East");
-					if(angle % 360 == 0){
-						simRobot.right90();
-					} else if(angle % 360 == 180){
-						simRobot.left90();
-					} else if(angle % 360 == 270){
-						simRobot.right90();
-						simRobot.right90();
-					}
-					simRobot.forwardOneCell();
-					//reset the angle to North
+					moveEast(simRobot, angle);
 					angle = 90;
 					currentCell = moveHistory.pop();
 				}
 			}
 			nextMove = moveHistory.peek();
 		}
-		//after getting to the cell with the next open move, the robot orients itself north
-		if(angle % 360 == 90){
+		//orient robot north after arrived at desired cell
+		if(angle == 90){
 			simRobot.left90();
-		} else if(angle % 360 == 180){
+		} else if(angle == 180){
 			simRobot.left90();
 			simRobot.left90();
-		} else if(angle % 360 == 270){
+		} else if(angle == 270){
 			simRobot.right90();
 		}
 	}
@@ -365,63 +294,107 @@ public class TestSimRobot {
 		//look at the cell to the North
 		try{
 			CellData north = map[x][y+1];
-			currentCell.setTriedNorth(true);
+			if(north == null){
+				System.out.println("No cell to the North");
+			} else {
+				System.out.println("There is a cell to the North");
+				currentCell.setTriedNorth(true);
+			}
 		} catch(IndexOutOfBoundsException e){
 			//exception thrown if at the edge of the maze
+			System.out.println("At the northern edge");
 			currentCell.setTriedNorth(true);
-		} catch(NullPointerException e){
-			//exception thrown if the cell hasn't been explored
-			currentCell.setTriedNorth(false);
 		}
 		
 		//look at the cell to the East
 		try{
 			CellData east = map[x+1][y];
-			currentCell.setTriedEast(true);
+			if(east == null){
+				System.out.println("No cell to the East");
+			} else {
+				System.out.println("There is a cell to the East");
+				currentCell.setTriedEast(true);
+			}
 		} catch(IndexOutOfBoundsException e){
 			//exception thrown if at the edge of the maze
+			System.out.println("At the Eastern edge");
 			currentCell.setTriedEast(true);
-		} catch(NullPointerException e){
-			//exception thrown if the cell hasn't been explored
-			currentCell.setTriedEast(false);
 		}
 		
 		//look at the cell to the South
 		try{
-			CellData east = map[x][y-1];
-			currentCell.setTriedSouth(true);
+			CellData south = map[x][y-1];
+			if(south == null){
+				System.out.println("No cell to the South");
+			} else {
+				System.out.println("There is a cell to the North");
+				currentCell.setTriedSouth(true);
+			}
 		} catch(IndexOutOfBoundsException e){
 			//exception thrown if at the edge of the maze
+			System.out.println("At the Southern edge");
 			currentCell.setTriedSouth(true);
-		} catch(NullPointerException e){
-			//exception thrown if the cell hasn't been explored
-			currentCell.setTriedSouth(false);
-		}
+		} 
 		
 		//look at the cell to the West
 		try{
-			CellData east = map[x-1][y];
-			currentCell.setTriedWest(true);
+			CellData west = map[x-1][y];
+			if(west == null){
+				System.out.println("No cell to the West");
+			} else {
+				System.out.println("There is a cell to the West");
+				currentCell.setTriedWest(true);
+			}
 		} catch(IndexOutOfBoundsException e){
 			//exception thrown if at the edge of the maze
+			System.out.println("At the Western edge");
 			currentCell.setTriedWest(true);
-		} catch(NullPointerException e){
-			//exception thrown if the cell hasn't been explored
-			currentCell.setTriedWest(false);
 		}
 		
 	}
 	
-	public static void moveNorth(SimRobot simRobot, int angle){
-		
+	public static void moveNorth(SimRobot simRobot, int degreesRotated){
+		if(degreesRotated == 90){
+			simRobot.left90();
+		} else if(degreesRotated == 180){
+			simRobot.left90();
+			simRobot.left90();
+		} else if(degreesRotated == 270){
+			simRobot.right90();
+		}
+		simRobot.forwardOneCell();
 	}
-	public static void moveEast(SimRobot simRobot, int angle){
-		
+	public static void moveEast(SimRobot simRobot, int degreesRotated){
+		if(degreesRotated == 0){
+			simRobot.right90();
+		} else if(degreesRotated == 180){
+			simRobot.left90();
+		} else if(degreesRotated == 270){
+			simRobot.right90();
+			simRobot.right90();
+		}
+		simRobot.forwardOneCell();
 	}
-	public static void moveSouth(SimRobot simRobot, int angle){
-		
+	public static void moveSouth(SimRobot simRobot, int degreesRotated){
+		if(degreesRotated == 0){
+			simRobot.right90();
+			simRobot.right90();
+		} else if(degreesRotated == 90){
+			simRobot.right90();
+		} else if(degreesRotated == 270){
+			simRobot.left90();
+		}
+		simRobot.forwardOneCell();
 	}
-	public static void moveWest(SimRobot simRobot, int angle){
-		
+	public static void moveWest(SimRobot simRobot, int degreesRotated){
+		if(degreesRotated == 0){
+			simRobot.left90();
+		} else if(degreesRotated == 90){
+			simRobot.right90();
+			simRobot.right90();
+		} else if(degreesRotated == 180){
+			simRobot.right90();
+		}
+		simRobot.forwardOneCell();
 	}
 }
