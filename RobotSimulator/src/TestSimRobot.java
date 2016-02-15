@@ -19,7 +19,6 @@ public class TestSimRobot {
 		
 		CellData[][] map = new CellData[4][4];
 		int degreesRotated = 0;
-		int angle;
 		LinkedList<CellData> moveHistory = new LinkedList<CellData>();
 		LinkedList<CellData> notFullyExplored = new LinkedList<CellData>();
 		
