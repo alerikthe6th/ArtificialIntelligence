@@ -85,6 +85,22 @@ public class CellData {
 	public void setTriedWest(boolean value){
 		this.triedWest = value;
 	}
+	
+	public void setNorthWall(boolean value){
+		this.northWall = value;
+	}
+	
+	public void setEastWall(boolean value){
+		this.eastWall = value;
+	}
+
+	public void setSouthWall(boolean value){
+		this.southWall = value;
+	}
+	
+	public void setWestWall(boolean value){
+		this.westWall = value;
+	}
 	//------end mutator methods------//
 	
 	//returns the number of possible moves for a cell.

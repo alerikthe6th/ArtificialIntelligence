@@ -8,7 +8,7 @@ public class TestSimRobot {
 
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException {
 		
-		SimRobot simRobot = new SimRobot("maze3.txt", 100); // 500 ms animation delay
+		SimRobot simRobot = new SimRobot("maze1.txt", 100); // 500 ms animation delay
 		
 		int x = 0;
 		int y = 0;
@@ -95,6 +95,7 @@ public class TestSimRobot {
 			if(simRobot.colorSensorSeesGoal()) {
 				System.out.println("Goal found!");
 				goHome(simRobot, degreesRotated, moveHistory);
+				drawMap(map);
 				break;
 			}
 			
@@ -132,9 +133,6 @@ public class TestSimRobot {
 				x--;
 			}
 			
-			System.out.println(moveHistory);
-			System.out.println(notFullyExplored);
-			
 			//resets the boolean values for the next iteration
 			right = false;
 			left = false;
@@ -148,18 +146,11 @@ public class TestSimRobot {
 		CellData destination = notFullyExplored.pop();
 		CellData currentCell = moveHistory.pop();
 		CellData nextMove = moveHistory.peek();
-		System.out.println("The current cell is (" + currentCell.getX() + ", " + currentCell.getY() + ")");
-		System.out.println("The destination cell is (" + destination.getX() + ", " + destination.getY() + ")");
-		System.out.println("The next cell should be (" + nextMove.getX() + ", " + nextMove.getY() + ")");
-		
+
 		//while the robot is still making its way back to the closest open move
 		while((currentCell.getX() != destination.getX()) || (currentCell.getY() != destination.getY())){
-			System.out.println("We are in the while loop!");
-			System.out.println("The current cell is (" + currentCell.getX() + ", " + currentCell.getY() + ")");
-			System.out.println("The next cell should be (" + nextMove.getX() + ", " + nextMove.getY() + ")");
 			if(currentCell.getX() - nextMove.getX() == 0){
 				//if the x values are the same then move either north or south
-				System.out.println("Move North or South");
 				if(currentCell.getY() - nextMove.getY() == 1){
 					moveSouth(simRobot, angle);
 					angle = 180;
@@ -170,7 +161,6 @@ public class TestSimRobot {
 					currentCell = moveHistory.pop();
 				}
 			} else {
-				System.out.println("Move East or West");
 				if(currentCell.getX() - nextMove.getX() == 1) {
 					moveWest(simRobot, angle);
 					angle = 270;
@@ -183,6 +173,7 @@ public class TestSimRobot {
 			}
 			nextMove = moveHistory.peek();
 		}
+		
 		//orient robot north after arrived at desired cell
 		if(angle == 90){
 			simRobot.left90();
@@ -295,14 +286,11 @@ public class TestSimRobot {
 		try{
 			CellData north = map[x][y+1];
 			if(north == null){
-				System.out.println("No cell to the North");
 			} else {
-				System.out.println("There is a cell to the North");
 				currentCell.setTriedNorth(true);
 			}
 		} catch(IndexOutOfBoundsException e){
 			//exception thrown if at the edge of the maze
-			System.out.println("At the northern edge");
 			currentCell.setTriedNorth(true);
 		}
 		
@@ -310,14 +298,11 @@ public class TestSimRobot {
 		try{
 			CellData east = map[x+1][y];
 			if(east == null){
-				System.out.println("No cell to the East");
 			} else {
-				System.out.println("There is a cell to the East");
 				currentCell.setTriedEast(true);
 			}
 		} catch(IndexOutOfBoundsException e){
 			//exception thrown if at the edge of the maze
-			System.out.println("At the Eastern edge");
 			currentCell.setTriedEast(true);
 		}
 		
@@ -325,14 +310,11 @@ public class TestSimRobot {
 		try{
 			CellData south = map[x][y-1];
 			if(south == null){
-				System.out.println("No cell to the South");
 			} else {
-				System.out.println("There is a cell to the North");
 				currentCell.setTriedSouth(true);
 			}
 		} catch(IndexOutOfBoundsException e){
 			//exception thrown if at the edge of the maze
-			System.out.println("At the Southern edge");
 			currentCell.setTriedSouth(true);
 		} 
 		
@@ -340,14 +322,11 @@ public class TestSimRobot {
 		try{
 			CellData west = map[x-1][y];
 			if(west == null){
-				System.out.println("No cell to the West");
 			} else {
-				System.out.println("There is a cell to the West");
 				currentCell.setTriedWest(true);
 			}
 		} catch(IndexOutOfBoundsException e){
 			//exception thrown if at the edge of the maze
-			System.out.println("At the Western edge");
 			currentCell.setTriedWest(true);
 		}
 		
@@ -396,5 +375,75 @@ public class TestSimRobot {
 			simRobot.right90();
 		}
 		simRobot.forwardOneCell();
+	}
+
+	public static void drawMap(CellData[][] map){
+		System.out.println("XXXXXXXXXXXXXXXXX");
+		drawMapCells(map, 3);
+		drawHorizontalWalls(map, 2);
+		drawMapCells(map, 2);
+		drawHorizontalWalls(map, 1);
+		drawMapCells(map, 1);
+		drawHorizontalWalls(map, 0);
+		drawMapCells(map, 0);
+		System.out.println("XXXXXXXXXXXXXXXXX");	
+	}
+	
+	public static void drawMapCells(CellData[][] map, int row){
+		for(int i = 0; i < 3; i++){
+			String str = "X";
+			for(int j = 0; j < 4; j++){
+				CellData currentCell = map[j][row];
+				if(currentCell == null){
+					if(j != 3){
+						str = str + "NNNN";
+					} else {
+						str = str + "NNNX";
+					}
+				} else {
+					str = str + "...";
+					if(j == 3){
+						str = str + "X";
+					} else {
+						if(currentCell.getEastWall()){
+							str = str + "X";
+						} else {
+							str = str + ".";
+						}
+					}
+				}
+			}
+			System.out.println(str);
+		}
+	}
+	
+	public static void drawHorizontalWalls(CellData[][] map, int row){
+		String str = "X";
+		for(int i = 0; i < 4; i++){
+			CellData currentCell = map[i][row];
+			if(currentCell == null){
+				if(i == 3){
+					str = str + "NNNX";
+				} else {
+					str = str + "NNNN";
+				}
+			} else {
+				if(currentCell.getNorthWall()){
+				str = str + "XXXX";
+				} else {
+					if(i == 3){
+						str = str + "...X";
+					} else {
+						str = str + "...";
+						if(currentCell.getEastWall()){
+							str = str + "X";
+						} else {
+							str = str + ".";
+						}
+					}
+				}
+			}
+		}
+		System.out.println(str);
 	}
 }
