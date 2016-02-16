@@ -6,8 +6,10 @@
 import java.util.LinkedList;
 
 import lejos.hardware.Button;
+import lejos.hardware.BrickFinder;
 import lejos.hardware.Sound;
 import lejos.hardware.lcd.LCD;
+import lejos.hardware.lcd.GraphicsLCD;
 import lejos.hardware.motor.Motor;
 import lejos.hardware.port.SensorPort;
 import lejos.robotics.Color;
@@ -29,6 +31,7 @@ public class WanderScanDemo {
 	static SampleProvider bumpSampleProvider;
 	static SampleProvider distanceSampleProvider;
 	static SampleProvider colorSampleProvider;
+	static GraphicsLCD g;
 	
 	//calibration variables for turn radius/move distances
 	static final float nextCellDist = 112;  //moves 1 meter to traverse cell to cell, calibrated to 110cm
@@ -44,6 +47,7 @@ public class WanderScanDemo {
 		bumpSensor = new EV3TouchSensor(SensorPort.S2);
 		colorSensor = new EV3ColorSensor(SensorPort.S4);
 		distanceSampleProvider = distanceSensor.getDistanceMode();
+		g = BrickFinder.getDefault().getGraphicsLCD();
 
 		robotPilot.setTravelSpeed(30);
 		robotPilot.setAcceleration(60);
@@ -229,6 +233,7 @@ public class WanderScanDemo {
 					robotPilot.rotate(-rot90); // always turn 90 degrees when you bump into something?
 				}
 				if (colorSensor.getColorID() == Color.WHITE){ // found the GOAL
+					drawMap(map, g);
 					break;
 				}
 			}
@@ -811,6 +816,68 @@ public class WanderScanDemo {
 			p.travel(nextCellDist);
 		}
 		
+	}
+	
+	public static void drawMap(CellData[][] map, GraphicsLCD g){
+		int width = g.getWidth();
+		int height = g.getHeight();
+		int x = width/4;
+		int y = height/4;
+		
+		for(int i = 3; i >= 0; i--){
+			for(int j = 3; j >= 0; j--){
+				drawCellWalls(map, j, i, g);
+			}
+		}
+		drawMapBorder(g);
+	}
+	
+	public static void drawCellWalls(CellData[][] map, int x, int y, GraphicsLCD g){
+		CellData cell = map[x][y];
+		int x2 = x + 1;
+		int y1, y2;
+		if(y == 3){
+			y1 = 0;
+			y2 = 1;
+		} else if(y == 2){
+			y1 = 1;
+			y2 = 2;
+		} else if(y == 1){
+			y1 = 2;
+			y2 = 3;
+		} else {
+			y1 = 3;
+			y2 = 4;
+		}
+		
+		if(cell == null){
+			//draw red cell
+			g.setColor(255, 0, 0);
+			g.drawRect(x * ((g.getWidth() - 1)/4), y1, x2 * ((g.getWidth() - 1)/4), y2);
+			g.setColor(255, 255, 255);
+		} else {
+			if(cell.getNorthWall()){
+				g.drawLine(x, y1, x2, y1);
+			}
+			if(cell.getEastWall()){
+				g.drawLine(x2, y1, x2, y2);
+			}
+			if(cell.getSouthWall()){
+				g.drawLine(x, y2, x2, y2);
+			}
+			if(cell.getWestWall()){
+				g.drawLine(x, y1, x, y2);
+			}
+		}
+	}
+	
+	public static void drawMapBorder(GraphicsLCD g){
+		int width = g.getWidth() - 1;
+		int height = g.getHeight() - 1;
+		g.drawLine(0, 0, width, 0);
+		g.drawLine(width, 0, width, height);
+		g.drawLine(0, height, width, height);
+		g.drawLine(0, 0, 0, height);
 	}
 
 
