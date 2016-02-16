@@ -1,5 +1,5 @@
 /** TODO:
- * change rotation angle of 90 to 85
+ * apply new testsimrobot changes to this project
  * reads faulty directions
  */
 
@@ -30,8 +30,11 @@ public class WanderScanDemo {
 	static SampleProvider distanceSampleProvider;
 	static SampleProvider colorSampleProvider;
 	
-	static final float nextCellDist = 110;  //moves 1 meter to traverse cell to cell
-
+	//calibration variables for turn radius/move distances
+	static final float nextCellDist = 112;  //moves 1 meter to traverse cell to cell, calibrated to 110cm
+	static final float rot90 = 85;			//turns 90 degrees to the right, calibrated to 85
+	static final float rot180 = 160;		//turns 180 degrees to the right, calibrated to 160;
+	
 	static long startTimeMillis;
 
 	public static void main(String[] args) {
@@ -89,14 +92,11 @@ public class WanderScanDemo {
 			float distBack = distanceScanData[2];
 			float distLeft = distanceScanData[3];
 			float distStraight = distanceScanData[0];
-
-			correction(distanceScanData);
 			
-			Delay.msDelay(5000);
 			LCD.clear();
 			LCD.drawString(String.format("DF: %.2f DR: %.2f", distStraight, distRight),0,1);
 			LCD.drawString(String.format("DL: %.2f DB: %.2f", distLeft, distBack),0,3);
-			Delay.msDelay(5000);
+			//Delay.msDelay(500);
 			LCD.clear();
 			if(distRight > 0 && distRight < 1) {
 				right = true;
@@ -114,7 +114,7 @@ public class WanderScanDemo {
 				back = true;
 				LCD.drawString("back: " + back, 0,4);
 			}
-			Delay.msDelay(5000);
+			//Delay.msDelay(1000);
 			
 			//keeps track of the orientation of the robot after it has moved with respect to the map
 			//and creates new cell data if the current cell is new
@@ -150,63 +150,63 @@ public class WanderScanDemo {
 			}
 			LCD.clear();
 			LCD.drawString("move chosen: " + map[x][y].chooseMove(), 0, 1);
-			Delay.msDelay(5000);
+			//Delay.msDelay(500);
 			LCD.clear();
 			LCD.drawString("deg rot: " + degreesRotated, 0,1);
-			Delay.msDelay(2000);
+			//Delay.msDelay(500);
 			//moving conditionals that track its body position relative to the map directions
 			if(map[x][y].chooseMove() == 0){ //if no possible moves begin to backtrack
 				//setting the coordinates of the cell it will end up in since the
 				//findClosestMove method doesn't keep track of the coordinates
 				x = notFullyExplored.peek().getX();
 				y = notFullyExplored.peek().getY();
-				findClosestMove(robotPilot, degreesRotated, moveHistory, notFullyExplored);
+				findClosestMove(robotPilot, degreesRotated, moveHistory, notFullyExplored, distanceScanData, left, right);
 				degreesRotated = 0;
 			} else if(map[x][y].chooseMove() == 1) {
 				if(degreesRotated == 90){
-					robotPilot.rotate(90);
+					robotPilot.rotate(rot90);
 				} else if(degreesRotated == 180){
-					robotPilot.rotate(160);
+					robotPilot.rotate(rot180);
 				} else if(degreesRotated == 270){
-					robotPilot.rotate(-90);
+					robotPilot.rotate(-rot90);
 				}
-				robotPilot.travel(nextCellDist);
+				travel(robotPilot, distanceScanData, left, right);
 				map[x][y].setTriedNorth(true);
 				y++;
 				degreesRotated = 0;
 			} else if(map[x][y].chooseMove() == 2) {
 				if(degreesRotated == 0){
-					robotPilot.rotate(-90);
+					robotPilot.rotate(-rot90);
 				} else if(degreesRotated == 180){
-					robotPilot.rotate(90);
+					robotPilot.rotate(rot90);
 				} else if(degreesRotated == 270){
-					robotPilot.rotate(160);
+					robotPilot.rotate(rot180);
 				}
-				robotPilot.travel(nextCellDist);
+				travel(robotPilot, distanceScanData, left, right);
 				map[x][y].setTriedEast(true);
 				degreesRotated = 90;
 				x++;
 			} else if(map[x][y].chooseMove() == 3) {
 				if(degreesRotated == 0){
-					robotPilot.rotate(160);
+					robotPilot.rotate(rot180);
 				} else if(degreesRotated == 90){
-					robotPilot.rotate(-90);
+					robotPilot.rotate(-rot90);
 				} else if(degreesRotated == 270){
-					robotPilot.rotate(90);
+					robotPilot.rotate(rot90);
 				}
-				robotPilot.travel(nextCellDist);
+				travel(robotPilot, distanceScanData, left, right);
 				map[x][y].setTriedSouth(true);
 				degreesRotated = 180;
 				y--;
 			} else if(map[x][y].chooseMove() == 4) {
 				if(degreesRotated == 0){
-					robotPilot.rotate(90);
+					robotPilot.rotate(rot90);
 				} else if(degreesRotated == 90){
-					robotPilot.rotate(160);
+					robotPilot.rotate(rot180);
 				} else if(degreesRotated == 180){
-					robotPilot.rotate(-90);
+					robotPilot.rotate(-rot90);
 				}
-				robotPilot.travel(nextCellDist);
+				travel(robotPilot, distanceScanData, left, right);
 				map[x][y].setTriedWest(true);
 				degreesRotated = 270;
 				x--;
@@ -218,12 +218,15 @@ public class WanderScanDemo {
 			front = false;
 			back = false;
 
+			/**
+			 * TODO: implement this inside the movement code, does not work outside
+			 */
 			while (robotPilot.isMoving()) {
 				bumpSampleProvider.fetchSample(bumpSample, 0);
 				if(bumpSample[0] == 1){ // is the touch sensor currently pushed in?
 					robotPilot.stop();
 					robotPilot.travel(-10);
-					robotPilot.rotate(-90); // always turn 90 degrees when you bump into something?
+					robotPilot.rotate(-rot90); // always turn 90 degrees when you bump into something?
 				}
 				if (colorSensor.getColorID() == Color.WHITE){ // found the GOAL
 					break;
@@ -234,6 +237,14 @@ public class WanderScanDemo {
 		Button.LEDPattern(4); // victory celebration!
 		Sound.beepSequenceUp();
 		Sound.beepSequence();
+		
+		//TODO: fix the params
+		//goHome(robotPilot, degreesRotated, moveHistory, distanceScanData, left, right);
+		
+		Button.LEDPattern(4); // victory celebration!
+		Sound.beepSequenceUp();
+		Sound.beepSequence();
+		
 		Button.waitForAnyPress();
 	}
 
@@ -269,7 +280,7 @@ public class WanderScanDemo {
 		int maxIndex = 0;
 
 		// this loop finds the direction that had the farthest distance reading
-		Delay.msDelay(5000);
+		//Delay.msDelay(5000);
 		for(int i = 0; i < distanceScanData.length; i++){
 			if(Double.isInfinite(distanceScanData[i])){  // anything beyond 2.5m reads as infinity from the sensor
 				maxIndex = i;
@@ -285,6 +296,7 @@ public class WanderScanDemo {
 		return angle;
 	}
 	
+	//useless
 	public static void correction(float[] dirDist) {
 		
 		float distance;
@@ -295,59 +307,40 @@ public class WanderScanDemo {
 		float backDist = dirDist[2];
 		
 		
-		LCD.drawString(String.format("Dist: %.2f", rightDist), 0, 4);
-		Delay.msDelay(500);
-		LCD.clear();
+		double correctionRadius = 0.35;
 		
-		if(rightDist <= 0.25) {
+		if(rightDist <= correctionRadius) {
 			Sound.playNote(Sound.FLUTE, 700, 100);
-			robotPilot.rotate(-90);
+			robotPilot.rotate(-rot90);
 			distance = getDistanceMeasurement();
-			LCD.drawString(String.format("Dist: %.2f", distance), 0, 4);
-			Delay.msDelay(500);
-			while(distance <= 0.4 && !Button.ESCAPE.isDown()) { 	//distance is in meters?
-				LCD.clear();
-				LCD.drawString(String.format("Dist: %.2f", distance), 0, 4);
+			while(distance <= 0.4 && !Button.ESCAPE.isDown()) { 	
 				robotPilot.travel(-5);
-				Delay.msDelay(500);
 				distance = getDistanceMeasurement();
 			}
-			robotPilot.rotate(90);
+			robotPilot.rotate(rot90);
 		}
-		if(leftDist <= 0.25) {
+		if(leftDist <= correctionRadius) {
 			Sound.playNote(Sound.FLUTE, 700, 100);
-			robotPilot.rotate(90);
-			while(leftDist <= 0.4) { 	//distance is in meters?
-				LCD.clear();
-				LCD.drawString(String.format("Dist: %.2f", leftDist), 0, 4);
+			robotPilot.rotate(rot90);
+			while(leftDist <= 0.4) { 	
 				robotPilot.travel(-5);
-				Delay.msDelay(500);
-				
 				distance = getDistanceMeasurement();
 			}
-			robotPilot.rotate(-90);
+			robotPilot.rotate(-rot90);
 		}
-		if(backDist <= 0.25) {
+		if(backDist <= correctionRadius) {
 			Sound.playNote(Sound.FLUTE, 700, 100);
 			frontNeckMotor.rotate(180);
-			while(backDist <= 0.4) { 	//distance is in meters?
-				LCD.clear();
-				LCD.drawString(String.format("Dist: %.2f", leftDist), 0, 4);
+			while(backDist <= 0.4) { 	
 				robotPilot.travel(5);
-				Delay.msDelay(500);
-				
 				distance = getDistanceMeasurement();
 			}
 			frontNeckMotor.rotate(-180);
 		}
-		if(frontDist <= 0.25) {
+		if(frontDist <= correctionRadius) {
 			Sound.playNote(Sound.FLUTE, 700, 100);
-			while(backDist <= 0.4) { 	//distance is in meters?
-				LCD.clear();
-				LCD.drawString(String.format("Dist: %.2f", leftDist), 0, 4);
+			while(backDist <= 0.4) { 	
 				robotPilot.travel(-5);
-				Delay.msDelay(500);
-				
 				distance = getDistanceMeasurement();
 			}
 		}
@@ -420,13 +413,11 @@ public class WanderScanDemo {
 			//exception thrown if at the edge of the maze
 			currentCell.setTriedWest(true);
 		}
-		LCD.clear();
-		LCD.drawString("Surroundings analyzed", 0, 1);
-		Delay.msDelay(1000);
 		
 	}
 	
-	public static void findClosestMove(DifferentialPilot robotPilot, int angle, LinkedList<CellData> moveHistory, LinkedList<CellData> notFullyExplored){
+	public static void findClosestMove(DifferentialPilot robotPilot, int angle, LinkedList<CellData> moveHistory, LinkedList<CellData> notFullyExplored, 
+			float[] distanceScanData, Boolean left, Boolean right){
 		CellData destination = notFullyExplored.pop();
 		CellData currentCell = moveHistory.pop();
 		CellData nextMove = moveHistory.peek();
@@ -437,26 +428,26 @@ public class WanderScanDemo {
 				if(currentCell.getY() - nextMove.getY() == 1){
 					//then go south
 					if(angle % 360 == 0){
-						robotPilot.rotate(160);
+						robotPilot.rotate(rot180);
 					} else if(angle % 360 == 90){
-						robotPilot.rotate(-90);
+						robotPilot.rotate(-rot90);
 					} else if(angle % 360 == 270){
-						robotPilot.rotate(90);
+						robotPilot.rotate(rot90);
 					}
-					robotPilot.travel(nextCellDist);
+					travel(robotPilot, distanceScanData, left, right);
 					//reset the angle to south
 					angle = 180;
 					currentCell = moveHistory.pop();
 				} else if(currentCell.getY() - nextMove.getY() == -1){
 					//then go North
 					if(angle % 360 == 90){
-						robotPilot.rotate(90);
+						robotPilot.rotate(rot90);
 					} else if(angle % 360 == 180){
-						robotPilot.rotate(160);
+						robotPilot.rotate(rot180);
 					} else if(angle % 360 == 270){
-						robotPilot.rotate(-90);
+						robotPilot.rotate(-rot90);
 					}
-					robotPilot.travel(nextCellDist);
+					travel(robotPilot, distanceScanData, left, right);
 					//reset the angle to North
 					angle = 0;
 					currentCell = moveHistory.pop();
@@ -465,26 +456,26 @@ public class WanderScanDemo {
 				if(currentCell.getX() - nextMove.getX() == 1) {
 					//go west
 					if(angle % 360 == 0){
-						robotPilot.rotate(90);
+						robotPilot.rotate(rot90);
 					} else if(angle % 360 == 90){
-						robotPilot.rotate(160);
+						robotPilot.rotate(rot180);
 					} else if(angle % 360 == 180){
-						robotPilot.rotate(-90);
+						robotPilot.rotate(-rot90);
 					}
-					robotPilot.travel(nextCellDist);
+					travel(robotPilot, distanceScanData, left, right);
 					//reset the angle to North
 					angle = 270;
 					currentCell = moveHistory.pop();
 				} else if(currentCell.getX() - nextMove.getX() == -1){
 					//go East
 					if(angle % 360 == 0){
-						robotPilot.rotate(-90);
+						robotPilot.rotate(-rot90);
 					} else if(angle % 360 == 180){
-						robotPilot.rotate(90);
+						robotPilot.rotate(rot90);
 					} else if(angle % 360 == 270){
-						robotPilot.rotate(160);
+						robotPilot.rotate(rot180);
 					}
-					robotPilot.travel(nextCellDist);
+					travel(robotPilot, distanceScanData, left, right);
 					//reset the angle to North
 					angle = 90;
 					currentCell = moveHistory.pop();
@@ -494,15 +485,15 @@ public class WanderScanDemo {
 		}
 		//after getting to the cell with the next open move, the robot orients itself north
 		if(angle % 360 == 90){
-			robotPilot.rotate(90);
+			robotPilot.rotate(rot90);
 		} else if(angle % 360 == 180){
-			robotPilot.rotate(160);
+			robotPilot.rotate(rot180);
 		} else if(angle % 360 == 270){
-			robotPilot.rotate(-90);
+			robotPilot.rotate(-rot90);
 		}
 	}
 	
-	public static void goHome(DifferentialPilot robotPilot, int angle, LinkedList<CellData> moveHistory){
+	public static void goHome(DifferentialPilot robotPilot, int angle, LinkedList<CellData> moveHistory, float[] distanceScanData, Boolean left, Boolean right){
 		CellData destination = moveHistory.getLast();
 		CellData currentCell = moveHistory.pop();
 		CellData nextMove = moveHistory.peek();
@@ -515,26 +506,26 @@ public class WanderScanDemo {
 				if(currentCell.getY() - nextMove.getY() == 1){
 					//then go south
 					if(angle % 360 == 0){
-						robotPilot.rotate(160);
+						robotPilot.rotate(rot180);
 					} else if(angle % 360 == 90){
-						robotPilot.rotate(-90);
+						robotPilot.rotate(-rot90);
 					} else if(angle % 360 == 270){
-						robotPilot.rotate(90);
+						robotPilot.rotate(rot90);
 					}
-					robotPilot.travel(nextCellDist);
+					travel(robotPilot, distanceScanData, left, right);
 					//reset the angle to south
 					angle = 180;
 					currentCell = moveHistory.pop();
 				} else {
 					//then go North
 					if(angle % 360 == 90){
-						robotPilot.rotate(90);
+						robotPilot.rotate(rot90);
 					} else if(angle % 360 == 180){
-						robotPilot.rotate(160);
+						robotPilot.rotate(rot180);
 					} else if(angle % 360 == 270){
-						robotPilot.rotate(-90);
+						robotPilot.rotate(-rot90);
 					}
-					robotPilot.travel(nextCellDist);
+					travel(robotPilot, distanceScanData, left, right);
 					//reset the angle to North
 					angle = 0;
 					currentCell = moveHistory.pop();
@@ -543,26 +534,26 @@ public class WanderScanDemo {
 				if(currentCell.getX() - nextMove.getX() == 1) {
 					//go west
 					if(angle % 360 == 0){
-						robotPilot.rotate(90);
+						robotPilot.rotate(rot90);
 					} else if(angle % 360 == 90){
-						robotPilot.rotate(160);
+						robotPilot.rotate(rot180);
 					} else if(angle % 360 == 180){
-						robotPilot.rotate(-90);
+						robotPilot.rotate(-rot90);
 					}
-					robotPilot.travel(nextCellDist);
+					travel(robotPilot, distanceScanData, left, right);
 					//reset the angle to North
 					angle = 270;
 					currentCell = moveHistory.pop();
 				} else {
 					//go East
 					if(angle % 360 == 0){
-						robotPilot.rotate(-90);
+						robotPilot.rotate(-rot90);
 					} else if(angle % 360 == 180){
-						robotPilot.rotate(90);
+						robotPilot.rotate(rot90);
 					} else if(angle % 360 == 270){
-						robotPilot.rotate(160);
+						robotPilot.rotate(rot180);
 					}
-					robotPilot.travel(nextCellDist);
+					travel(robotPilot, distanceScanData, left, right);
 					//reset the angle to North
 					angle = 90;
 					currentCell = moveHistory.pop();
@@ -570,6 +561,256 @@ public class WanderScanDemo {
 			}
 			nextMove = moveHistory.peek();
 		}
+	}
+	/**
+	 * accounts for  traveling in place of the robot.travel methods in the main body. 
+	 * should travel with correction
+	 * @param p
+	 * @param distanceScanData
+	 * @param L
+	 * @param Right
+	 */
+	public static void travel(DifferentialPilot p, float[] distanceScanData, Boolean left, Boolean right) {
+		
+		
+		Float dist;
+		double detectDist = 0.35;
+		double travelToDist = 0.4;
+		int rotAngle = 5;
+		
+		
+		if(left && right) { //correct when both walls are present and chooses the one with the closer distance to correct from
+			
+			LCD.clear();
+			LCD.drawString("left and right wall seen", 0, 1);
+			//Delay.msDelay(500);
+			dist = getDistanceMeasurement();
+			if(distanceScanData[1] < distanceScanData[3]) { //correct from right wall if it's closer to it
+				
+				float setDist = 0.5f;
+				float distTrav = 0;
+				float curDist;
+				int neckRotCounter = 0;
+				
+				LCD.clear();
+				LCD.drawString("correct from right", 0, 1);
+				//Delay.msDelay(500);
+				
+				frontNeckMotor.rotate(90);
+				//dist = getDistanceMeasurement();
+				
+				/*
+				while(distTrav <= nextCellDist) {
+					
+					p.travel(23);
+					curDist = getDistanceMeasurement();
+					
+					if(curDist <= setDist) {
+						p.rotate(10);
+						frontNeckMotor.rotate(10);
+						neckRotCounter++;
+					}else if(curDist >= setDist) {
+						p.rotate(-10);
+						frontNeckMotor.rotate(-10);
+						neckRotCounter--;
+					}
+					distTrav += 23;
+				}
+				frontNeckMotor.rotate(-90-(neckRotCounter*10));
+				*/
+				
+				
+				float distTraveled = 0;
+				int bodyRotCounter = 0;
+				
+				if(dist.doubleValue() < detectDist) {
+					while(dist <= travelToDist) {
+						
+						p.rotate(rotAngle);
+						p.travel(10);
+						frontNeckMotor.rotate(rotAngle);			//turns the neck to be perpendicular from the wall its correcting from.
+						dist = getDistanceMeasurement();
+						distTraveled += 10;
+						neckRotCounter++;
+						bodyRotCounter++;
+					}
+				}
+				p.travel(nextCellDist - distTraveled);
+				distTraveled = 0;
+				frontNeckMotor.rotate(-90-(neckRotCounter*rotAngle));		//turns neck back, including the additional rotations counter
+				p.rotate(-bodyRotCounter*(2*rotAngle));								// fixes its body angle after correcting the distance away.
+				
+				
+			}else if(distanceScanData[3] < distanceScanData[1]) { //correct from left wall if it's closer it
+				
+				LCD.clear();
+				LCD.drawString("correct from left", 0, 1);
+				//Delay.msDelay(500);
+				
+				float setDist = 0.5f;
+				float distTrav = 0;
+				float curDist;
+				int neckRotCounter = 0;
+				frontNeckMotor.rotate(-90);
+				/*
+					while(distTrav <= nextCellDist) {
+					
+					p.travel(23);
+					curDist = getDistanceMeasurement();
+					
+					if(curDist <= setDist) {
+						p.rotate(-10);
+						frontNeckMotor.rotate(-10);
+						neckRotCounter--;
+					}else if(curDist >= setDist) {
+						p.rotate(10);
+						frontNeckMotor.rotate(10);
+						neckRotCounter++;
+					}
+					distTrav += 23;
+				}
+				frontNeckMotor.rotate(90+(neckRotCounter*10));
+				*/
+				
+				dist = getDistanceMeasurement();
+				float distTraveled = 0;
+				int bodyRotCounter = 0;
+				if(dist.doubleValue() < detectDist) {
+					while(dist <= travelToDist) {
+						
+						p.rotate(-rotAngle);
+						p.travel(10);
+						frontNeckMotor.rotate(-rotAngle);
+						dist = getDistanceMeasurement();
+						distTraveled += 10;
+						neckRotCounter++;
+						bodyRotCounter++;
+					}
+				}
+				p.travel(nextCellDist - distTraveled);
+				distTraveled = 0;
+				frontNeckMotor.rotate(90+(neckRotCounter*rotAngle));
+				p.rotate(bodyRotCounter*(2*rotAngle));
+				
+				
+			}
+			
+		} else if(right) { //correct when one a right wall is present
+			
+			LCD.clear();
+			LCD.drawString("left: f, right: t", 0, 1);
+			//Delay.msDelay(2500);
+			
+			float setDist = 0.5f;
+			float distTrav = 0;
+			float curDist;
+			int neckRotCounter = 0;
+			frontNeckMotor.rotate(90);
+			
+			/*
+				while(distTrav <= nextCellDist) {
+				
+				p.travel(23);
+				curDist = getDistanceMeasurement();
+				
+				if(curDist <= setDist) {
+					p.rotate(10);
+					frontNeckMotor.rotate(10);
+					neckRotCounter++;
+				}else if(curDist >= setDist) {
+					p.rotate(-10);
+					frontNeckMotor.rotate(-10);
+					neckRotCounter--;
+				}
+				distTrav += 23;
+			}
+			frontNeckMotor.rotate(-90-(neckRotCounter*10));
+			*/
+			
+			dist = getDistanceMeasurement();
+			float distTraveled = 0;
+			int bodyRotCounter = 0;
+			if(dist.doubleValue() < detectDist) {
+				while(dist <= travelToDist) {
+					
+					p.rotate(rotAngle);
+					p.travel(10);
+					frontNeckMotor.rotate(rotAngle);
+					dist = getDistanceMeasurement();
+					distTraveled += 10;
+					neckRotCounter++;
+					bodyRotCounter++;
+				}
+			}
+			p.travel(nextCellDist - distTraveled);
+			distTraveled = 0;
+			frontNeckMotor.rotate(-90-(neckRotCounter*rotAngle));
+			p.rotate(-bodyRotCounter*(2*rotAngle));
+			
+			
+			
+		}else if(left) { //correct when only a left wall is present
+			
+			LCD.clear();
+			LCD.drawString("left: t, right: f", 0, 1);
+			//Delay.msDelay(500);
+			
+			float setDist = 0.5f;
+			float distTrav = 0;
+			float curDist;
+			int neckRotCounter = 0;
+			frontNeckMotor.rotate(-90);
+			
+			/*
+				while(distTrav <= nextCellDist) {
+				
+				p.travel(23);
+				curDist = getDistanceMeasurement();
+				
+				if(curDist <= setDist) {
+					p.rotate(-10);
+					frontNeckMotor.rotate(-10);
+					neckRotCounter--;
+				}else if(curDist >= setDist) {
+					p.rotate(10);
+					frontNeckMotor.rotate(10);
+					neckRotCounter++;
+				}
+				distTrav += 23;
+			}
+			frontNeckMotor.rotate(90+(neckRotCounter*10));
+			*/
+			
+			dist = getDistanceMeasurement();
+			float distTraveled = 0;
+			int bodyRotCounter = 0;
+			if(dist.doubleValue() < detectDist) {
+				while(dist <= distanceScanData[3]) {
+					
+					p.rotate(-rotAngle);
+					p.travel(10);
+					frontNeckMotor.rotate(-rotAngle);
+					dist = getDistanceMeasurement();
+					distTraveled += 10;
+					neckRotCounter++;
+					bodyRotCounter++;
+				}
+			}
+			p.travel(nextCellDist - distTraveled);
+			distTraveled = 0;
+			frontNeckMotor.rotate(90+(neckRotCounter*rotAngle));
+			p.rotate(bodyRotCounter*(2*rotAngle));
+			
+			
+		}else{ //travels forward when no walls to its side
+			
+			LCD.clear();
+			LCD.drawString("no left or right wall", 0, 1);
+			//Delay.msDelay(500);
+			
+			p.travel(nextCellDist);
+		}
+		
 	}
 
 
